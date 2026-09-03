@@ -3,28 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>首爾氣候卡 跨裝置全連動記帳本</title>
+  <title>首爾氣候卡 7日記帳本 (匯出匯入版)</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Firebase SDK (用於手機與電腦全組件即時連動) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased pb-12">
 
   <!-- 頂部 Header -->
   <div class="sticky top-0 z-50 bg-blue-600 text-white p-3 shadow-md flex justify-between items-center">
     <div>
-      <h1 class="text-base font-bold">🇰🇷 氣候卡 跨裝置全連動記帳</h1>
-      <p class="text-[10px] text-blue-100" id="headerSyncStatus">目前模式：本機離線儲存</p>
+      <h1 class="text-base font-bold">🇰🇷 氣候卡 7日離線記帳本</h1>
+      <p class="text-[10px] text-blue-100">支援離線儲存 ➔ 匯出/匯入備份</p>
     </div>
-    <button onclick="toggleSyncModal()" class="bg-blue-700 hover:bg-blue-800 text-white text-xs px-2.5 py-1.5 rounded-lg border border-blue-400 font-medium">
-      🔄 雲端同步設定
-    </button>
+    <!-- 匯出與匯入按鈕 -->
+    <div class="flex gap-1">
+      <button onclick="exportData()" class="bg-blue-700 hover:bg-blue-800 text-white text-xs px-2.5 py-1.5 rounded-lg border border-blue-400 font-medium">
+        📤 匯出行程
+      </button>
+      <button onclick="triggerImport()" class="bg-blue-800 hover:bg-blue-900 text-white text-xs px-2.5 py-1.5 rounded-lg border border-blue-400 font-medium">
+        📥 匯入行程
+      </button>
+      <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="importData(event)">
+    </div>
   </div>
 
   <div class="max-w-md mx-auto p-4 space-y-4">
 
-    <!-- 1. 氣候卡剩餘天數倒數卡片 (連動) -->
+    <!-- 1. 氣候卡剩餘天數倒數卡片 -->
     <div id="countdownCard" class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-4 rounded-xl shadow-md space-y-2">
       <div class="flex justify-between items-center">
         <span class="text-xs text-slate-400 font-semibold uppercase">🎫 氣候卡效期倒數</span>
@@ -42,13 +46,13 @@
         </div>
       </div>
 
-      <!-- 進度條 (連動) -->
+      <!-- 進度條 -->
       <div class="w-full bg-slate-700 rounded-full h-2 mt-2">
         <div id="progressBar" class="bg-amber-400 h-2 rounded-full transition-all duration-500" style="width: 100%"></div>
       </div>
     </div>
 
-    <!-- 2. 開卡日期設定 (連動) -->
+    <!-- 2. 開卡日期設定 -->
     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
       <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">🗓️ 7日票 開卡日期設定</label>
       <div class="grid grid-cols-2 gap-2">
@@ -67,24 +71,11 @@
     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
       <div class="flex justify-between items-center">
         <h2 class="font-bold text-sm text-slate-800 flex items-center gap-1">➕ 新增搭乘行程</h2>
-        <span class="text-[10px] bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded">自動估算車資</span>
+        <span class="text-[10px] bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded">自動記憶地點</span>
       </div>
 
-      <datalist id="stationList">
-        <option value="鍾路五街 (廣藏市場)"></option>
-        <option value="明洞"></option>
-        <option value="弘大入口"></option>
-        <option value="聖水"></option>
-        <option value="江南"></option>
-        <option value="狎鷗亭羅德奧"></option>
-        <option value="新沙 (林蔭大道)"></option>
-        <option value="東大門"></option>
-        <option value="安國 (北村)"></option>
-        <option value="景福宮"></option>
-        <option value="蠶室"></option>
-        <option value="梨泰院"></option>
-        <option value="首爾站"></option>
-      </datalist>
+      <!-- 動態下拉式選單 (自動加入新地點) -->
+      <datalist id="stationList"></datalist>
 
       <div class="grid grid-cols-3 gap-2">
         <div>
@@ -116,15 +107,15 @@
       </div>
 
       <button onclick="addTrip()" class="w-full bg-blue-600 active:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-sm shadow transition-all">
-        新增並同步至所有裝置
+        新增行程 (自動記錄地點)
       </button>
     </div>
 
-    <!-- 4. 行程清單 (連動) -->
+    <!-- 4. 行程清單 -->
     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
       <div class="flex justify-between items-center">
-        <h3 class="font-bold text-sm text-slate-800">📋 已同步行程總表</h3>
-        <button onclick="clearTrips()" class="text-xs text-red-500 font-semibold">清空行程</button>
+        <h3 class="font-bold text-sm text-slate-800">📋 行程總表</h3>
+        <button onclick="clearTrips()" class="text-xs text-red-500 font-semibold">清空所有行程</button>
       </div>
 
       <div id="tripList" class="space-y-2 text-sm max-h-60 overflow-y-auto pr-1">
@@ -132,11 +123,11 @@
       </div>
     </div>
 
-    <!-- 5. 全局試算結算卡片 (連動) -->
+    <!-- 5. 車資試算結算卡片 -->
     <div id="resultCard" class="bg-slate-800 text-white p-5 rounded-2xl shadow-lg space-y-3">
       <div class="flex justify-between items-start">
         <div>
-          <p class="text-xs text-slate-400 font-semibold uppercase">7日票 實時試算結果</p>
+          <p class="text-xs text-slate-400 font-semibold uppercase">7日票 試算結果</p>
           <h3 id="recommendation" class="text-lg font-bold text-amber-400">請新增行程開始試算</h3>
         </div>
         <span id="badge" class="bg-slate-700 text-slate-300 text-[10px] px-2 py-1 rounded-full">等待紀錄</span>
@@ -156,35 +147,17 @@
 
   </div>
 
-  <!-- 同步彈窗 Modal -->
-  <div id="syncModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-xl">
-      <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="font-bold text-slate-800">📲 跨裝置雲端同步配對</h3>
-        <button onclick="toggleSyncModal()" class="text-slate-400 hover:text-slate-600 font-bold">✕</button>
-      </div>
-      <p class="text-xs text-slate-600">在電腦與手機輸入**相同數字**（如 `777888`），兩邊的**開卡倒數、行程表與車資計算**就會全部連動！</p>
-      
-      <div>
-        <label class="block text-xs font-bold text-slate-700 mb-1">自訂連線同步碼</label>
-        <input type="text" id="syncCodeInput" placeholder="例如: 777888" class="w-full border rounded-lg p-2.5 font-mono text-center text-lg font-bold bg-slate-50">
-      </div>
-
-      <button onclick="connectSync()" class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg text-sm">開啓連動</button>
-      <p id="syncStatusText" class="text-[11px] text-center text-slate-400">狀態：單邊儲存模式</p>
-    </div>
-  </div>
-
   <script>
-    // Firebase Realtime Database 免費服務
-    const firebaseConfig = {
-      databaseURL: "https://seoul-climate-card-default-rtdb.asia-southeast1.firebasedatabase.app"
-    };
+    // 預設熱門站點
+    const defaultStations = [
+      "鍾路五街 (廣藏市場)", "明洞", "弘大入口", "聖水", "江南", 
+      "狎鷗亭羅德奧", "新沙 (林蔭大道)", "東大門", "安國 (北村)", 
+      "景福宮", "蠶室", "梨泰院", "首爾站", "汝矣島"
+    ];
 
-    let db = null;
-    let currentSyncCode = null;
     let appState = {
       startDate: new Date().toISOString().split('T')[0],
+      customStations: [], // 儲存使用者自訂輸入過的地點
       trips: []
     };
 
@@ -198,81 +171,25 @@
     };
 
     window.onload = function() {
-      try {
-        firebase.initializeApp(firebaseConfig);
-        db = firebase.database();
-      } catch(e) { console.log("Firebase 尚未連線"); }
-
+      loadLocalState();
       document.getElementById('tripDate').value = appState.startDate;
-
-      // 讀取上次使用的同步代碼
-      const savedCode = localStorage.getItem('syncCode');
-      if (savedCode) {
-        document.getElementById('syncCodeInput').value = savedCode;
-        connectSync();
-      } else {
-        loadLocalState();
-        renderAll();
-      }
+      renderAll();
     };
 
-    function toggleSyncModal() {
-      document.getElementById('syncModal').classList.toggle('hidden');
-    }
-
-    // 建立/連接雲端連動房間
-    function connectSync() {
-      const code = document.getElementById('syncCodeInput').value.trim();
-      if (!code) {
-        alert("請輸入同步代碼");
-        return;
-      }
-
-      currentSyncCode = code;
-      localStorage.setItem('syncCode', code);
-      
-      document.getElementById('headerSyncStatus').innerText = `已連動房間：${code}`;
-      document.getElementById('syncStatusText').innerText = `已成功連動至房間 ${code}`;
-      document.getElementById('syncStatusText').className = "text-[11px] text-center text-emerald-600 font-bold";
-
-      if (db) {
-        // 核心機制：即時監聽雲端數據變化（手機/電腦任一端更新，雙方皆會執行渲染）
-        db.ref('climate_rooms/' + code).on('value', (snapshot) => {
-          const data = snapshot.val();
-          if (data) {
-            appState.startDate = data.startDate || appState.startDate;
-            appState.trips = data.trips || [];
-            renderAll();
-          } else {
-            // 若為全新代碼，同步現有數據至雲端
-            syncStateToCloud();
-          }
-        });
-      }
-
-      toggleSyncModal();
-    }
-
-    // 全局資料同步 (Local + Cloud)
-    function syncStateToCloud() {
-      localStorage.setItem('climateAppState', JSON.stringify(appState));
-      
-      if (db && currentSyncCode) {
-        db.ref('climate_rooms/' + currentSyncCode).set(appState);
-      }
+    function saveLocalState() {
+      localStorage.setItem('climateAppState_v2', JSON.stringify(appState));
     }
 
     function loadLocalState() {
-      const saved = localStorage.getItem('climateAppState');
+      const saved = localStorage.getItem('climateAppState_v2');
       if (saved) {
         try { appState = JSON.parse(saved); } catch (e) {}
       }
     }
 
-    // 當修改開卡日期時
     function onStartDateChange() {
       appState.startDate = document.getElementById('startDate').value;
-      syncStateToCloud();
+      saveLocalState();
       renderAll();
     }
 
@@ -293,13 +210,26 @@
       fareInput.value = routeFareDb[key] || routeFareDb[rKey] || 1550;
     }
 
+    // 新增地點至選單 (過濾重複)
+    function rememberStation(stationName) {
+      if (!stationName) return;
+      const cleanName = stationName.trim();
+      if (!defaultStations.includes(cleanName) && !appState.customStations.includes(cleanName)) {
+        appState.customStations.push(cleanName);
+      }
+    }
+
     // 新增行程
     function addTrip() {
       const tripDate = document.getElementById('tripDate').value;
-      const fromLoc = document.getElementById('fromLoc').value.trim() || '地點A';
-      const toLoc = document.getElementById('toLoc').value.trim() || '地點B';
+      const fromLoc = document.getElementById('fromLoc').value.trim() || '未指定';
+      const toLoc = document.getElementById('toLoc').value.trim() || '未指定';
       const fare = parseInt(document.getElementById('estimatedFare').value) || 0;
       const isTransfer = document.getElementById('isTransfer').value === 'true';
+
+      // 自動記憶輸入過的地點
+      rememberStation(fromLoc);
+      rememberStation(toLoc);
 
       appState.trips.push({
         date: tripDate,
@@ -311,7 +241,7 @@
 
       appState.trips.sort((a, b) => new Date(a.date) - new Date(b.date));
 
-      syncStateToCloud();
+      saveLocalState();
       renderAll();
 
       document.getElementById('fromLoc').value = '';
@@ -322,21 +252,61 @@
 
     function removeTrip(index) {
       appState.trips.splice(index, 1);
-      syncStateToCloud();
+      saveLocalState();
       renderAll();
     }
 
     function clearTrips() {
-      if (confirm("確定要清空所有行程？（兩端將會同步清空）")) {
+      if (confirm("確定要清空所有行程與紀錄？")) {
         appState.trips = [];
-        syncStateToCloud();
+        saveLocalState();
         renderAll();
       }
     }
 
-    // 核心 UI 渲染：全面同步更新 倒數卡片、行程列表、結算金額
+    // 📤 匯出 JSON 檔案
+    function exportData() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `韓國氣候卡行程_${appState.startDate}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+    }
+
+    // 📥 觸發匯入
+    function triggerImport() {
+      document.getElementById('importFileInput').click();
+    }
+
+    // 📥 讀取並匯入檔案
+    function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const importedData = JSON.parse(e.target.result);
+          if (importedData.trips && Array.isArray(importedData.trips)) {
+            appState = importedData;
+            saveLocalState();
+            renderAll();
+            alert("✅ 行程資料已成功匯入！");
+          } else {
+            alert("❌ 檔案格式不正確");
+          }
+        } catch (err) {
+          alert("❌ 讀取檔案失敗，請確認是否為正確的 JSON 檔案");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // 渲染 UI (更新倒數、選單、行程表與車資)
     function renderAll() {
-      // 1. 渲染日期與倒數
+      // 1. 更新開卡與到期日倒數
       document.getElementById('startDate').value = appState.startDate;
       
       const startDate = new Date(appState.startDate);
@@ -375,7 +345,12 @@
         progressBar.style.width = `${pct}%`;
       }
 
-      // 2. 渲染行程列表
+      // 2. 更新下拉式選單 (組合預設 + 使用者輸入過的地點，自動去重)
+      const stationListEl = document.getElementById('stationList');
+      const allStations = Array.from(new Set([...defaultStations, ...appState.customStations]));
+      stationListEl.innerHTML = allStations.map(s => `<option value="${s}"></option>`).join('');
+
+      // 3. 更新行程清單
       const listEl = document.getElementById('tripList');
       if (appState.trips.length === 0) {
         listEl.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">目前尚無紀錄</p>`;
@@ -403,7 +378,7 @@
         listEl.innerHTML = html;
       }
 
-      // 3. 渲染車資試算結果
+      // 4. 車資試算結算
       const climateTotal = 20000;
       const totalTMoney = appState.trips.reduce((sum, t) => sum + t.fare, 0);
 
