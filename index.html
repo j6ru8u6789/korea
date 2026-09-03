@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>韓國氣候同行卡 划算度計算器</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen py-8 px-4 sm:px-6">
+
+  <div class="max-w-2xl mx-auto space-y-6">
+    
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 text-center">
+      <h1 class="text-2xl font-bold text-slate-900 mb-2">🇰🇷 氣候同行卡 划算度計算器</h1>
+      <p class="text-slate-500 text-sm">輸入你的行程習慣，快速試算買定期票還是刷 T-Money 划算！</p>
+    </div>
+
+    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 space-y-5">
+      <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+        <span>⚙️</span> 行程與票券設定
+      </h2>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">選擇使用天數 (票價)</label>
+          <select id="ticketType" class="w-full border border-slate-300 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800">
+            <option value="5000">1日票 (₩5,000)</option>
+            <option value="8000">2日票 (₩8,000)</option>
+            <option value="10000">3日票 (₩10,000)</option>
+            <option value="15000">5日票 (₩15,000)</option>
+            <option value="20000" selected>7日票 (₩20,000)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">實體卡費用</label>
+          <select id="cardFee" class="w-full border border-slate-300 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800">
+            <option value="0">已有實體卡 / 行動卡 (₩0)</option>
+            <option value="3000">需購買實體空卡 (+₩3,000)</option>
+          </select>
+        </div>
+      </div>
+
+      <hr class="border-slate-100" />
+
+      <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+        <span>🚍</span> 每日搭乘預估 (平均)
+      </h2>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">每日預計搭乘次數</label>
+          <input type="number" id="dailyRides" value="3" min="1" max="15" class="w-full border border-slate-300 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">平均單程車資 (KRW)</label>
+          <select id="singleFare" class="w-full border border-slate-300 rounded-lg p-2.5 bg-slate-50 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none text-slate-800">
+            <option value="1400">₩1,400 (市區公車基本資費)</option>
+            <option value="1550" selected>₩1,550 (市區地鐵基本資費)</option>
+            <option value="1750">₩1,750 (稍長距離/轉乘基本)</option>
+            <option value="2000">₩2,000 (長距離/跨區搭乘)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div id="resultCard" class="p-6 rounded-2xl shadow-sm border transition-all duration-300">
+      <div class="text-center space-y-2">
+        <span id="badge" class="inline-block px-3 py-1 rounded-full text-xs font-semibold">分析中</span>
+        <h3 id="recommendationTitle" class="text-xl font-bold text-slate-900"></h3>
+        <p id="recommendationDetail" class="text-slate-600 text-sm"></p>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-slate-200/60 text-center">
+        <div>
+          <p class="text-xs text-slate-500 font-medium">使用 T-Money 刷卡總額</p>
+          <p id="tmoneyTotal" class="text-lg font-bold text-slate-800 mt-1">₩0</p>
+        </div>
+        <div>
+          <p class="text-xs text-slate-500 font-medium">氣候卡總成本 (含購卡)</p>
+          <p id="climateTotal" class="text-lg font-bold text-slate-800 mt-1">₩0</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-amber-50 border border-amber-200/60 rounded-2xl p-4 text-xs text-amber-800 space-y-1">
+      <p class="font-bold">💡 氣候同行卡使用提醒：</p>
+      <ul class="list-disc pl-4 space-y-0.5">
+        <li>僅限搭乘 **首爾市區內** 的地鐵路線與首爾市區公車。</li>
+        <li>**不適用：** 新盆唐線、京畿道/仁川巴士、廣域（紅色）巴士。</li>
+        <li>從仁川機場出發搭乘機場鐵道不可使用（入境首爾市區後出站需補票）。</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <script>
+    // 取得 DOM 元素
+    const ticketTypeEl = document.getElementById('ticketType');
+    const cardFeeEl = document.getElementById('cardFee');
+    const dailyRidesEl = document.getElementById('dailyRides');
+    const singleFareEl = document.getElementById('singleFare');
+
+    const resultCard = document.getElementById('resultCard');
+    const badge = document.getElementById('badge');
+    const recommendationTitle = document.getElementById('recommendationTitle');
+    const recommendationDetail = document.getElementById('recommendationDetail');
+    const tmoneyTotalEl = document.getElementById('tmoneyTotal');
+    const climateTotalEl = document.getElementById('climateTotal');
+
+    // 計算邏輯
+    function calculate() {
+      const ticketCost = parseInt(ticketTypeEl.value);
+      const cardFee = parseInt(cardFeeEl.value);
+      const dailyRides = parseInt(dailyRidesEl.value) || 0;
+      const singleFare = parseInt(singleFareEl.value);
+
+      // 天數對照
+      const daysMap = { 5000: 1, 8000: 2, 10000: 3, 15000: 5, 20000: 7 };
+      const days = daysMap[ticketCost];
+
+      // 費用計算
+      const totalRides = dailyRides * days;
+      const tmoneyTotal = totalRides * singleFare;
+      const climateTotal = ticketCost + cardFee;
+      const diff = Math.abs(tmoneyTotal - climateTotal);
+
+      // UI 更新
+      tmoneyTotalEl.innerText = `₩${tmoneyTotal.toLocaleString()}`;
+      climateTotalEl.innerText = `₩${climateTotal.toLocaleString()}`;
+
+      if (tmoneyTotal > climateTotal) {
+        // 氣候卡較划算
+        resultCard.className = "bg-emerald-50 p-6 rounded-2xl shadow-sm border border-emerald-200 transition-all";
+        badge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800";
+        badge.innerText = "超值推薦";
+        recommendationTitle.innerText = "🎉 建議購買氣候同行卡！";
+        recommendationTitle.className = "text-xl font-bold text-emerald-900";
+        recommendationDetail.innerText = `在 ${days} 天的行程中，預計搭乘 ${totalRides} 次，使用氣候卡可以為你省下約 ₩${diff.toLocaleString()}！`;
+      } else if (tmoneyTotal < climateTotal) {
+        // T-Money 較划算
+        resultCard.className = "bg-slate-100 p-6 rounded-2xl shadow-sm border border-slate-200 transition-all";
+        badge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700";
+        badge.innerText = "按次扣款更省";
+        recommendationTitle.innerText = "💳 建議直接刷 T-Money 即可";
+        recommendationTitle.className = "text-xl font-bold text-slate-800";
+        recommendationDetail.innerText = `預估交通費未達定期票門檻，直接刷卡比買氣候卡省下約 ₩${diff.toLocaleString()}。`;
+      } else {
+        // 平手
+        resultCard.className = "bg-blue-50 p-6 rounded-2xl shadow-sm border border-blue-200 transition-all";
+        badge.className = "inline-block px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800";
+        badge.innerText = "打平開銷";
+        recommendationTitle.innerText = "⚖️ 兩者費用剛好打平";
+        recommendationTitle.className = "text-xl font-bold text-blue-900";
+        recommendationDetail.innerText = `總花費相同。購買氣候卡的好處是後續多搭的行程都是免費的！`;
+      }
+    }
+
+    // 監聽變更事件
+    [ticketTypeEl, cardFeeEl, dailyRidesEl, singleFareEl].forEach(el => {
+      el.addEventListener('change', calculate);
+      el.addEventListener('input', calculate);
+    });
+
+    // 初次載入計算
+    calculate();
+  </script>
+</body>
+</html>
