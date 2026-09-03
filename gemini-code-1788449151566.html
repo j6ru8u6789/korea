@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Olive Young 購物隨身計算器</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 16px; background: #f8f9fa; }
+    .card { background: white; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 16px; }
+    h2 { margin-top: 0; color: #8cb811; } /* Olive Young 品牌綠 */
+    #reader { width: 100%; border-radius: 8px; overflow: hidden; }
+    .input-group { display: flex; gap: 8px; margin-top: 12px; }
+    input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 16px; }
+    button { padding: 10px 16px; background: #8cb811; color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+    .item-list { list-style: none; padding: 0; margin: 0; }
+    .item-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+    .total-box { font-size: 20px; font-weight: bold; text-align: right; color: #d93025; margin-top: 12px; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h2>🛍️ Olive Young 掃碼記帳</h2>
+    <div id="reader"></div>
+    
+    <div class="input-group">
+      <input type="text" id="barcode-result" placeholder="條碼號碼 / 商品名稱">
+      <input type="number" id="price-input" placeholder="價格 (韓元 ₩)">
+      <button onclick="addItem()">新增</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🛒 購物清單</h3>
+    <ul id="item-list" class="item-list"></ul>
+    <div class="total-box">總計：₩ <span id="total-price">0</span></div>
+  </div>
+
+  <script>
+    let total = 0;
+
+    // 初始化掃描器
+    function onScanSuccess(decodedText, decodedResult) {
+      document.getElementById('barcode-result').value = decodedText;
+      // 提醒使用者輸入現場標籤上的價格
+      document.getElementById('price-input').focus();
+    }
+
+    let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: 250 });
+    html5QrcodeScanner.render(onScanSuccess);
+
+    // 新增商品至清單
+    function addItem() {
+      const name = document.getElementById('barcode-result').value || '未命名商品';
+      const price = parseInt(document.getElementById('price-input').value) || 0;
+
+      if (price <= 0) {
+        alert('請輸入有效的金額！');
+        return;
+      }
+
+      total += price;
+      document.getElementById('total-price').innerText = total.toLocaleString();
+
+      const ul = document.getElementById('item-list');
+      const li = document.createElement('li');
+      li.className = 'item-row';
+      li.innerHTML = `<span>${name}</span> <span>₩ ${price.toLocaleString()}</span>`;
+      ul.appendChild(li);
+
+      // 清空輸入框
+      document.getElementById('barcode-result').value = '';
+      document.getElementById('price-input').value = '';
+    }
+  </script>
+</body>
+</html>
