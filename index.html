@@ -3,100 +3,108 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>韓國氣候卡行程計算器</title>
+  <title>首爾氣候卡行程算分機</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-100 text-slate-800 antialiased pb-10">
+<body class="bg-slate-100 text-slate-800 antialiased pb-12">
 
-  <!-- 頂部手機 Header -->
+  <!-- 頂部 Header -->
   <div class="sticky top-0 z-50 bg-blue-600 text-white p-4 shadow-md text-center">
-    <h1 class="text-lg font-bold">🇰🇷 氣候卡 vs T-Money 手機試算</h1>
-    <p class="text-xs text-blue-100 mt-0.5">自動計算 30 分鐘免費轉乘優惠</p>
+    <h1 class="text-base font-bold">🇰🇷 韓國氣候卡划算度算算看</h1>
+    <p class="text-xs text-blue-100 mt-0.5">輸入地點自動估算車資 + 30分鐘轉乘優惠</p>
   </div>
 
   <div class="max-w-md mx-auto p-4 space-y-4">
 
-    <!-- 票券設定卡片 -->
+    <!-- 票券設定 -->
     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-      <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">預計購買氣候卡票種</label>
-      <div class="grid grid-cols-2 gap-2">
-        <select id="passType" class="border rounded-lg p-2 bg-slate-50 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option value="5000">1日票 (₩5,000)</option>
-          <option value="8000">2日票 (₩8,000)</option>
-          <option value="10000">3日票 (₩10,000)</option>
-          <option value="15000">5日票 (₩15,000)</option>
-          <option value="20000" selected>7日票 (₩20,000)</option>
-        </select>
-
-        <select id="cardFee" class="border rounded-lg p-2 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option value="0">已有空卡 (+₩0)</option>
-          <option value="3000">需買實體卡 (+₩3,000)</option>
-        </select>
-      </div>
+      <label class="block text-xs font-bold text-slate-500 uppercase mb-1">氣候卡票種選擇</label>
+      <select id="passType" onchange="calculate()" class="w-full border rounded-lg p-2.5 bg-slate-50 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <option value="5000">1日票 (₩5,000)</option>
+        <option value="8000">2日票 (₩8,000)</option>
+        <option value="10000">3日票 (₩10,000)</option>
+        <option value="15000">5日票 (₩15,000)</option>
+        <option value="20000" selected>7日票 (₩20,000)</option>
+      </select>
     </div>
 
     <!-- 快速新增行程表單 -->
     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
       <div class="flex justify-between items-center">
         <h2 class="font-bold text-sm text-slate-800 flex items-center gap-1">
-          <span>➕</span> 新增一段搭乘
+          <span>➕</span> 新增路線搭乘
         </h2>
-        <span class="text-xs text-slate-400">依序輸入各段行程</span>
+        <span class="text-xs text-blue-600 font-semibold">打1個字自動提示地點</span>
       </div>
 
+      <!-- 熱門地點 Datalist -->
+      <datalist id="stationList">
+        <option value="明洞"></option>
+        <option value="弘大入口"></option>
+        <option value="東大門"></option>
+        <option value="聖水"></option>
+        <option value="安國 (北村/三清洞)"></option>
+        <option value="景福宮"></option>
+        <option value="蠶室 (樂天世界)"></option>
+        <option value="江南"></option>
+        <option value="梨泰院"></option>
+        <option value="首爾站"></option>
+        <option value="高速巴士客運站"></option>
+        <option value="新沙 (新沙洞林蔭道)"></option>
+        <option value="汝矣島 (The Hyundai)"></option>
+        <option value="仁川機場"></option>
+      </datalist>
+
       <div class="grid grid-cols-2 gap-2">
-        <input type="text" id="fromLoc" placeholder="起點 (例: 明洞)" class="border rounded-lg p-2 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <input type="text" id="toLoc" placeholder="終點 (例: 弘大)" class="border rounded-lg p-2 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <div>
+          <label class="block text-[10px] text-slate-400 mb-0.5">起點</label>
+          <input type="text" id="fromLoc" list="stationList" placeholder="例: 明洞" oninput="autoEstimateFare()" class="w-full border rounded-lg p-2 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-[10px] text-slate-400 mb-0.5">終點</label>
+          <input type="text" id="toLoc" list="stationList" placeholder="例: 弘大入口" oninput="autoEstimateFare()" class="w-full border rounded-lg p-2 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
       </div>
 
       <div class="grid grid-cols-2 gap-2">
         <div>
-          <label class="block text-[10px] text-slate-400 mb-0.5">交通工具</label>
-          <select id="transportType" class="w-full border rounded-lg p-2 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="1550">地鐵 (基本 ₩1,550)</option>
-            <option value="1550">幹線/支線公車 (₩1,550)</option>
-            <option value="1400">社區小巴 (₩1,400)</option>
-            <option value="3000">廣域公車/新盆唐線 (₩3,000)</option>
-          </select>
+          <label class="block text-[10px] text-slate-400 mb-0.5">交通方式 / 自動票價</label>
+          <input type="number" id="estimatedFare" value="1550" class="w-full border rounded-lg p-2 text-sm bg-slate-50 font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
         </div>
 
         <div>
-          <label class="block text-[10px] text-slate-400 mb-0.5">轉乘條件</label>
-          <select id="isTransfer" class="w-full border rounded-lg p-2 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <option value="false">🆕 新的搭乘 (收基本費)</option>
+          <label class="block text-[10px] text-slate-400 mb-0.5">優惠條件</label>
+          <select id="isTransfer" onchange="autoEstimateFare()" class="w-full border rounded-lg p-2 text-sm bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="false">🆕 新的搭乘</option>
             <option value="true">🔄 30分內轉乘 (免基本費)</option>
           </select>
         </div>
       </div>
 
-      <!-- 超程溢價（超過 10km） -->
-      <div class="flex items-center gap-2 pt-1">
-        <input type="checkbox" id="extraFare" class="w-4 h-4 text-blue-600 rounded">
-        <label for="extraFare" class="text-xs text-slate-600">這段屬於長途搭乘 (超過10km，加收 ₩100~300)</label>
-      </div>
+      <p id="fareNote" class="text-[11px] text-slate-500 italic">💡 首爾地鐵/公車基本車資 ₩1,550，長途依距離加價。</p>
 
-      <button onclick="addTrip()" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold py-2.5 rounded-lg text-sm shadow transition-all">
-        新增到行程清單
+      <button onclick="addTrip()" class="w-full bg-blue-600 active:bg-blue-700 text-white font-bold py-2.5 rounded-lg text-sm shadow transition-all">
+        加入這段行程
       </button>
     </div>
 
-    <!-- 已輸入的行程清單 -->
+    <!-- 已輸入行程清單 -->
     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
       <div class="flex justify-between items-center">
-        <h3 class="font-bold text-sm text-slate-800">📋 已規劃行程列表</h3>
-        <button onclick="clearTrips()" class="text-xs text-red-500 hover:underline">清空行程</button>
+        <h3 class="font-bold text-sm text-slate-800">📋 已輸入行程列表</h3>
+        <button onclick="clearTrips()" class="text-xs text-red-500 font-semibold">清空全部</button>
       </div>
 
       <div id="tripList" class="space-y-2 text-sm max-h-56 overflow-y-auto pr-1">
-        <p class="text-xs text-slate-400 text-center py-4">尚無輸入行程，請在上方新增行程</p>
+        <p class="text-xs text-slate-400 text-center py-4">目前尚無行程，請在上方輸入地點</p>
       </div>
     </div>
 
-    <!-- 試算結果卡片 -->
+    <!-- 結果區 -->
     <div id="resultCard" class="bg-slate-800 text-white p-5 rounded-2xl shadow-lg space-y-3">
       <div class="flex justify-between items-start">
         <div>
-          <p class="text-xs text-slate-400 uppercase font-semibold">費用分析結果</p>
+          <p class="text-xs text-slate-400 uppercase font-semibold">費用計算比較</p>
           <h3 id="recommendation" class="text-lg font-bold text-amber-400">請新增行程</h3>
         </div>
         <span id="badge" class="bg-slate-700 text-slate-300 text-[10px] px-2 py-1 rounded-full">等待輸入</span>
@@ -104,12 +112,12 @@
 
       <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-700 text-center">
         <div class="bg-slate-700/50 p-2 rounded-lg">
-          <p class="text-[10px] text-slate-400">T-Money 按次扣款</p>
+          <p class="text-[10px] text-slate-400">T-Money 按次總額</p>
           <p id="tmoneyCost" class="text-base font-bold">₩0</p>
         </div>
         <div class="bg-slate-700/50 p-2 rounded-lg">
-          <p class="text-[10px] text-slate-400">氣候卡總成本</p>
-          <p id="climateCost" class="text-base font-bold">₩0</p>
+          <p class="text-[10px] text-slate-400">氣候卡票價</p>
+          <p id="climateCost" class="text-base font-bold">₩20,000</p>
         </div>
       </div>
     </div>
@@ -119,33 +127,63 @@
   <script>
     let trips = [];
 
-    function addTrip() {
-      const fromLoc = document.getElementById('fromLoc').value.trim() || '未定地點';
-      const toLoc = document.getElementById('toLoc').value.trim() || '未定地點';
-      const baseFare = parseInt(document.getElementById('transportType').value);
-      const isTransfer = document.getElementById('isTransfer').value === 'true';
-      const hasExtra = document.getElementById('extraFare').checked;
+    // 熱門路線車資資料庫 (鍵值為 "起點-終點")
+    const routeFareDb = {
+      "明洞-弘大入口": 1550,
+      "弘大入口-明洞": 1550,
+      "明洞-東大門": 1550,
+      "東大門-明洞": 1550,
+      "明洞-聖水": 1650,
+      "聖水-明洞": 1650,
+      "明洞-蠶室 (樂天世界)": 1750,
+      "蠶室 (樂天世界)-明洞": 1750,
+      "弘大入口-蠶室 (樂天世界)": 1850,
+      "明洞-安國 (北村/三清洞)": 1550,
+      "明洞-仁川機場": 4750
+    };
 
-      // 韓國轉乘規則：30分鐘內轉乘免基本費，僅加算長途溢價 (預估 +₩200)
-      let actualFare = 0;
+    // 自動依起終點與轉乘狀況估算車資
+    function autoEstimateFare() {
+      const from = document.getElementById('fromLoc').value.trim();
+      const to = document.getElementById('toLoc').value.trim();
+      const isTransfer = document.getElementById('isTransfer').value === 'true';
+      const fareInput = document.getElementById('estimatedFare');
+      const fareNote = document.getElementById('fareNote');
+
       if (isTransfer) {
-        actualFare = hasExtra ? 200 : 0; 
-      } else {
-        actualFare = baseFare + (hasExtra ? 200 : 0);
+        fareInput.value = 0;
+        fareNote.innerText = "🔄 30 分鐘內轉乘：免收基本車資！";
+        return;
       }
+
+      const routeKey = `${from}-${to}`;
+      if (routeFareDb[routeKey]) {
+        fareInput.value = routeFareDb[routeKey];
+        fareNote.innerText = `✨ 已自動辨識熱門路線「${from} ➔ ${to}」票價 ₩${routeFareDb[routeKey]}`;
+      } else {
+        fareInput.value = 1550;
+        fareNote.innerText = "💡 使用首爾市區地鐵/公車基本預設車資 ₩1,550";
+      }
+    }
+
+    function addTrip() {
+      const fromLoc = document.getElementById('fromLoc').value.trim() || '市區站點';
+      const toLoc = document.getElementById('toLoc').value.trim() || '市區站點';
+      const fare = parseInt(document.getElementById('estimatedFare').value) || 0;
+      const isTransfer = document.getElementById('isTransfer').value === 'true';
 
       trips.push({
         from: fromLoc,
         to: toLoc,
-        fare: actualFare,
+        fare: fare,
         isTransfer: isTransfer
       });
 
       // 清空輸入框
       document.getElementById('fromLoc').value = '';
       document.getElementById('toLoc').value = '';
-      document.getElementById('extraFare').checked = false;
       document.getElementById('isTransfer').value = 'false';
+      autoEstimateFare();
 
       renderTrips();
     }
@@ -153,16 +191,13 @@
     function renderTrips() {
       const listEl = document.getElementById('tripList');
       if (trips.length === 0) {
-        listEl.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">尚無輸入行程，請在上方新增行程</p>`;
-        calculate(0);
+        listEl.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">目前尚無行程，請在上方輸入地點</p>`;
+        calculate();
         return;
       }
 
       let html = '';
-      let totalTMoney = 0;
-
       trips.forEach((trip, index) => {
-        totalTMoney += trip.fare;
         html += `
           <div class="flex justify-between items-center p-2 rounded-lg bg-slate-50 border border-slate-100 text-xs">
             <div class="flex items-center gap-1.5 overflow-hidden">
@@ -172,15 +207,15 @@
               <span class="truncate font-medium text-slate-700">${trip.from} ➔ ${trip.to}</span>
             </div>
             <div class="flex items-center gap-2 shrink-0">
-              <span class="font-bold text-slate-800">₩${trip.fare}</span>
-              <button onclick="removeTrip(${index})" class="text-slate-400 hover:text-red-500 font-bold">✕</button>
+              <span class="font-bold text-slate-800">₩${trip.fare.toLocaleString()}</span>
+              <button onclick="removeTrip(${index})" class="text-slate-400 hover:text-red-500 font-bold text-sm px-1">✕</button>
             </div>
           </div>
         `;
       });
 
       listEl.innerHTML = html;
-      calculate(totalTMoney);
+      calculate();
     }
 
     function removeTrip(index) {
@@ -193,10 +228,9 @@
       renderTrips();
     }
 
-    function calculate(totalTMoney) {
-      const passCost = parseInt(document.getElementById('passType').value);
-      const cardFee = parseInt(document.getElementById('cardFee').value);
-      const totalClimate = passCost + cardFee;
+    function calculate() {
+      const climateTotal = parseInt(document.getElementById('passType').value);
+      const totalTMoney = trips.reduce((sum, t) => sum + t.fare, 0);
 
       const tmoneyCostEl = document.getElementById('tmoneyCost');
       const climateCostEl = document.getElementById('climateCost');
@@ -204,7 +238,7 @@
       const badgeEl = document.getElementById('badge');
 
       tmoneyCostEl.innerText = `₩${totalTMoney.toLocaleString()}`;
-      climateCostEl.innerText = `₩${totalClimate.toLocaleString()}`;
+      climateCostEl.innerText = `₩${climateTotal.toLocaleString()}`;
 
       if (trips.length === 0) {
         recommendationEl.innerText = "請新增行程試算";
@@ -213,24 +247,23 @@
         return;
       }
 
-      const diff = Math.abs(totalTMoney - totalClimate);
+      const diff = Math.abs(totalTMoney - climateTotal);
 
-      if (totalTMoney > totalClimate) {
-        recommendationEl.innerText = `買氣候卡划算！省下 ₩${diff.toLocaleString()}`;
+      if (totalTMoney > climateTotal) {
+        recommendationEl.innerText = `買氣候卡划算！省 ₩${diff.toLocaleString()}`;
         recommendationEl.className = "text-lg font-bold text-emerald-400";
-        badgeEl.innerText = "推薦氣候卡";
+        badgeEl.innerText = "建議買氣候卡";
         badgeEl.className = "bg-emerald-500 text-white text-[10px] px-2 py-1 rounded-full font-bold";
       } else {
-        recommendationEl.innerText = `用 T-Money 即可！省下 ₩${diff.toLocaleString()}`;
+        recommendationEl.innerText = `刷 T-Money 即可！省 ₩${diff.toLocaleString()}`;
         recommendationEl.className = "text-lg font-bold text-blue-300";
-        badgeEl.innerText = "推薦 T-Money";
+        badgeEl.innerText = "建議刷 T-Money";
         badgeEl.className = "bg-blue-500 text-white text-[10px] px-2 py-1 rounded-full font-bold";
       }
     }
 
-    // 監聽選單切換
-    document.getElementById('passType').addEventListener('change', () => renderTrips());
-    document.getElementById('cardFee').addEventListener('change', () => renderTrips());
+    // 初次載入初始化
+    autoEstimateFare();
   </script>
 </body>
 </html>
