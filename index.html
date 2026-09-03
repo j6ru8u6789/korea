@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>首爾氣候卡 7日記帳本 (匯出匯入版)</title>
+  <title>首爾氣候卡 7日記帳本</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased pb-12">
@@ -12,15 +12,15 @@
   <div class="sticky top-0 z-50 bg-blue-600 text-white p-3 shadow-md flex justify-between items-center">
     <div>
       <h1 class="text-base font-bold">🇰🇷 氣候卡 7日離線記帳本</h1>
-      <p class="text-[10px] text-blue-100">支援離線儲存 ➔ 匯出/匯入備份</p>
+      <p class="text-[10px] text-blue-100">離線自動記憶 ➔ 匯出/匯入備份</p>
     </div>
     <!-- 匯出與匯入按鈕 -->
     <div class="flex gap-1">
       <button onclick="exportData()" class="bg-blue-700 hover:bg-blue-800 text-white text-xs px-2.5 py-1.5 rounded-lg border border-blue-400 font-medium">
-        📤 匯出行程
+        📤 匯出
       </button>
       <button onclick="triggerImport()" class="bg-blue-800 hover:bg-blue-900 text-white text-xs px-2.5 py-1.5 rounded-lg border border-blue-400 font-medium">
-        📥 匯入行程
+        📥 匯入
       </button>
       <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="importData(event)">
     </div>
@@ -28,53 +28,14 @@
 
   <div class="max-w-md mx-auto p-4 space-y-4">
 
-    <!-- 1. 氣候卡剩餘天數倒數卡片 -->
-    <div id="countdownCard" class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-4 rounded-xl shadow-md space-y-2">
-      <div class="flex justify-between items-center">
-        <span class="text-xs text-slate-400 font-semibold uppercase">🎫 氣候卡效期倒數</span>
-        <span id="remainingDaysBadge" class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white">使用中</span>
-      </div>
-      
-      <div class="flex justify-between items-baseline pt-1">
-        <div>
-          <p class="text-2xl font-black text-amber-400" id="remainingDaysText">7 天 0 小時</p>
-          <p class="text-[11px] text-slate-300" id="dateRangeText">啟用日期：未設定</p>
-        </div>
-        <div class="text-right">
-          <p class="text-[10px] text-slate-400">7日票成本</p>
-          <p class="text-sm font-bold text-white">₩20,000</p>
-        </div>
-      </div>
-
-      <!-- 進度條 -->
-      <div class="w-full bg-slate-700 rounded-full h-2 mt-2">
-        <div id="progressBar" class="bg-amber-400 h-2 rounded-full transition-all duration-500" style="width: 100%"></div>
-      </div>
-    </div>
-
-    <!-- 2. 開卡日期設定 -->
-    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
-      <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">🗓️ 7日票 開卡日期設定</label>
-      <div class="grid grid-cols-2 gap-2">
-        <div>
-          <label class="block text-[10px] text-slate-400 mb-0.5">啟用日期</label>
-          <input type="date" id="startDate" onchange="onStartDateChange()" class="w-full border rounded-lg p-2 text-xs bg-slate-50 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
-        </div>
-        <div>
-          <label class="block text-[10px] text-slate-400 mb-0.5">到期日期</label>
-          <input type="text" id="endDateDisplay" readonly disabled value="---" class="w-full border rounded-lg p-2 text-xs bg-slate-100 font-bold text-slate-600">
-        </div>
-      </div>
-    </div>
-
-    <!-- 3. 新增行程表單 -->
+    <!-- 1. 新增行程表單 (最上面) -->
     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
       <div class="flex justify-between items-center">
         <h2 class="font-bold text-sm text-slate-800 flex items-center gap-1">➕ 新增搭乘行程</h2>
         <span class="text-[10px] bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded">自動記憶地點</span>
       </div>
 
-      <!-- 動態下拉式選單 (自動加入新地點) -->
+      <!-- 動態下拉式選單 -->
       <datalist id="stationList"></datalist>
 
       <div class="grid grid-cols-3 gap-2">
@@ -111,7 +72,7 @@
       </button>
     </div>
 
-    <!-- 4. 行程清單 -->
+    <!-- 2. 行程清單 -->
     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
       <div class="flex justify-between items-center">
         <h3 class="font-bold text-sm text-slate-800">📋 行程總表</h3>
@@ -123,8 +84,8 @@
       </div>
     </div>
 
-    <!-- 5. 車資試算結算卡片 -->
-    <div id="resultCard" class="bg-slate-800 text-white p-5 rounded-2xl shadow-lg space-y-3">
+    <!-- 3. 車資試算結果 + 使用期間與倒數天數 (合併卡片) -->
+    <div id="resultCard" class="bg-slate-800 text-white p-5 rounded-2xl shadow-lg space-y-4">
       <div class="flex justify-between items-start">
         <div>
           <p class="text-xs text-slate-400 font-semibold uppercase">7日票 試算結果</p>
@@ -133,7 +94,8 @@
         <span id="badge" class="bg-slate-700 text-slate-300 text-[10px] px-2 py-1 rounded-full">等待紀錄</span>
       </div>
 
-      <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-700 text-center">
+      <!-- 車資試算數據 -->
+      <div class="grid grid-cols-2 gap-2 text-center">
         <div class="bg-slate-700/50 p-2 rounded-lg">
           <p class="text-[10px] text-slate-400">一般卡累積車資</p>
           <p id="tmoneyCost" class="text-base font-bold">₩0</p>
@@ -143,12 +105,44 @@
           <p id="climateCost" class="text-base font-bold">₩20,000</p>
         </div>
       </div>
+
+      <!-- 合併：使用期間與還剩幾天倒數 -->
+      <div class="pt-3 border-t border-slate-700/80 space-y-2">
+        <div class="flex justify-between items-center text-xs">
+          <span class="text-slate-400 font-medium">🗓️ <span id="dateRangeText">使用期間：未設定</span></span>
+          <span id="remainingDaysBadge" class="font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[10px]">使用中</span>
+        </div>
+
+        <div class="flex justify-between items-baseline">
+          <p class="text-xs text-slate-300">效期倒數剩餘：</p>
+          <p class="text-xl font-black text-amber-400" id="remainingDaysText">7 天 0 小時</p>
+        </div>
+
+        <!-- 進度條 -->
+        <div class="w-full bg-slate-700 rounded-full h-1.5">
+          <div id="progressBar" class="bg-amber-400 h-1.5 rounded-full transition-all duration-500" style="width: 100%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. 開卡日期設定 (最下面) -->
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
+      <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">🗓️ 7日票 開卡日期設定</label>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="block text-[10px] text-slate-400 mb-0.5">啟用日期</label>
+          <input type="date" id="startDate" onchange="onStartDateChange()" class="w-full border rounded-lg p-2 text-xs bg-slate-50 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div>
+          <label class="block text-[10px] text-slate-400 mb-0.5">到期日期</label>
+          <input type="text" id="endDateDisplay" readonly disabled value="---" class="w-full border rounded-lg p-2 text-xs bg-slate-100 font-bold text-slate-600">
+        </div>
+      </div>
     </div>
 
   </div>
 
   <script>
-    // 預設熱門站點
     const defaultStations = [
       "鍾路五街 (廣藏市場)", "明洞", "弘大入口", "聖水", "江南", 
       "狎鷗亭羅德奧", "新沙 (林蔭大道)", "東大門", "安國 (北村)", 
@@ -157,7 +151,7 @@
 
     let appState = {
       startDate: new Date().toISOString().split('T')[0],
-      customStations: [], // 儲存使用者自訂輸入過的地點
+      customStations: [],
       trips: []
     };
 
@@ -177,11 +171,11 @@
     };
 
     function saveLocalState() {
-      localStorage.setItem('climateAppState_v2', JSON.stringify(appState));
+      localStorage.setItem('climateAppState_v3', JSON.stringify(appState));
     }
 
     function loadLocalState() {
-      const saved = localStorage.getItem('climateAppState_v2');
+      const saved = localStorage.getItem('climateAppState_v3');
       if (saved) {
         try { appState = JSON.parse(saved); } catch (e) {}
       }
@@ -193,7 +187,6 @@
       renderAll();
     }
 
-    // 自動預估車資
     function autoEstimateFare() {
       const from = document.getElementById('fromLoc').value.trim();
       const to = document.getElementById('toLoc').value.trim();
@@ -210,7 +203,6 @@
       fareInput.value = routeFareDb[key] || routeFareDb[rKey] || 1550;
     }
 
-    // 新增地點至選單 (過濾重複)
     function rememberStation(stationName) {
       if (!stationName) return;
       const cleanName = stationName.trim();
@@ -219,7 +211,6 @@
       }
     }
 
-    // 新增行程
     function addTrip() {
       const tripDate = document.getElementById('tripDate').value;
       const fromLoc = document.getElementById('fromLoc').value.trim() || '未指定';
@@ -227,7 +218,6 @@
       const fare = parseInt(document.getElementById('estimatedFare').value) || 0;
       const isTransfer = document.getElementById('isTransfer').value === 'true';
 
-      // 自動記憶輸入過的地點
       rememberStation(fromLoc);
       rememberStation(toLoc);
 
@@ -264,7 +254,6 @@
       }
     }
 
-    // 📤 匯出 JSON 檔案
     function exportData() {
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2));
       const downloadAnchor = document.createElement('a');
@@ -275,12 +264,10 @@
       downloadAnchor.remove();
     }
 
-    // 📥 觸發匯入
     function triggerImport() {
       document.getElementById('importFileInput').click();
     }
 
-    // 📥 讀取並匯入檔案
     function importData(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -298,15 +285,14 @@
             alert("❌ 檔案格式不正確");
           }
         } catch (err) {
-          alert("❌ 讀取檔案失敗，請確認是否為正確的 JSON 檔案");
+          alert("❌ 讀取檔案失敗");
         }
       };
       reader.readAsText(file);
     }
 
-    // 渲染 UI (更新倒數、選單、行程表與車資)
     function renderAll() {
-      // 1. 更新開卡與到期日倒數
+      // 1. 更新開卡與到期日
       document.getElementById('startDate').value = appState.startDate;
       
       const startDate = new Date(appState.startDate);
@@ -318,6 +304,7 @@
       document.getElementById('endDateDisplay').value = endStr;
       document.getElementById('dateRangeText').innerText = `使用期間：${startStr} ~ ${endStr}`;
 
+      // 計算剩餘倒數時間
       const now = new Date();
       const expirationDate = new Date(endDate);
       expirationDate.setHours(23, 59, 59);
@@ -332,20 +319,20 @@
 
       if (diffTime < 0) {
         remainingText.innerText = "已過期";
-        remainingText.className = "text-2xl font-black text-red-400";
+        remainingText.className = "text-xl font-black text-red-400";
         badge.innerText = "已失效";
-        badge.className = "text-xs font-bold px-2 py-0.5 rounded-full bg-red-500 text-white";
+        badge.className = "font-bold px-2 py-0.5 rounded-full bg-red-500 text-white text-[10px]";
         progressBar.style.width = "0%";
       } else {
         remainingText.innerText = `${diffDays} 天 ${diffHours} 小時`;
-        remainingText.className = "text-2xl font-black text-amber-400";
+        remainingText.className = "text-xl font-black text-amber-400";
         badge.innerText = "使用中";
-        badge.className = "text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white";
+        badge.className = "font-bold px-2 py-0.5 rounded-full bg-emerald-500 text-white text-[10px]";
         const pct = Math.max(0, Math.min(100, (diffTime / (7 * 24 * 60 * 60 * 1000)) * 100));
         progressBar.style.width = `${pct}%`;
       }
 
-      // 2. 更新下拉式選單 (組合預設 + 使用者輸入過的地點，自動去重)
+      // 2. 更新選單
       const stationListEl = document.getElementById('stationList');
       const allStations = Array.from(new Set([...defaultStations, ...appState.customStations]));
       stationListEl.innerHTML = allStations.map(s => `<option value="${s}"></option>`).join('');
